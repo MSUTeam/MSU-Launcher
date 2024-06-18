@@ -14,11 +14,11 @@ const TABBED_NEWLINE: &str = "\n\t\t\t";
 const ON_RUNNING_PATH: &str = "preload/on_running.txt";
 const ON_START_PATH: &str = "preload/on_start.txt";
 
-const MOD_ID: &str = "mod_load_patcher";
-const ZIP_NAME: &str = "~mod_load_patcher.zip";
-const MOD_NAME: &str = "Load Patcher";
-const MOD_NAMESPACE: &str = "LoadPatcher";
-const MOD_STRING: &str = include_str!("../squirrel/mod_resource_loader.nut");
+const MOD_ID: &str = "mod_msu_launcher";
+const ZIP_NAME: &str = "~mod_msu_launcher.zip";
+const MOD_NAME: &str = "MSU Launcher";
+const MOD_NAMESPACE: &str = "MSULauncher";
+const MOD_STRING: &str = include_str!("../squirrel/mod_msu_launcher.nut");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub struct ResourceGatherer {
