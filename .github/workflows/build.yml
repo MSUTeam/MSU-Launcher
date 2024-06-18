@@ -36,7 +36,7 @@ jobs:
         run: cargo install dioxus-cli
 
       - name: Build Dioxus App
-        run: dx build --release --features bundle
+        run: dx build --release --features bundle --target x86_64-pc-windows-msvc
 
       - name: Package the build artifacts
         run: |
