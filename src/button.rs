@@ -68,16 +68,7 @@ pub fn ConfigButton(
 
 async fn launch_game(config: ReadOnlySignal<Config, SyncStorage>, mut logger: SyncSignal<InfoLog>) {
 	patcher_preload::async_gather_and_create_mod(config, logger).await;
-	let exe_path = match config.read().get_bb_exe_path() {
-		Some(path) => path,
-		None => {
-			logger.with_mut(|l| {
-				l.error("Couldn't find BattleBrothers.exe");
-			});
-			return;
-		}
-	};
-	match Command::new(exe_path.as_ref()).spawn() {
+	match config.read().launch_game() {
 		Ok(_) => {
 			logger.with_mut(|l| {
 				l.info("Launched Battle Brothers");
@@ -142,7 +133,7 @@ pub fn RunPreloadPatcherButton(
 pub fn Run4GBPatcherButton(
 	class: Option<String>,
 	style: Option<String>,
-	config: ReadOnlySignal<Config, SyncStorage>,
+	config: SyncSignal<Config>,
 	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	config.with_mut(|c| c.check_steamless_installed());

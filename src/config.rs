@@ -5,9 +5,12 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
+use steamlocate::SteamDir;
+
 use crate::steamless;
 
 const STEAMLESS_PATH_DEFAULT: &str = "./steamless";
+const BB_GAME_ID: u32 = 365360;
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
@@ -18,9 +21,13 @@ pub struct Config {
 
 const CONFIG_FILE: &str = "config.toml";
 
+fn find_steam() -> Result<SteamDir> {
+	steamlocate::SteamDir::locate().context("steamlocate couldn't locate Steam")
+}
+
 fn find_bb() -> Result<PathBuf> {
-	let steam_dir = steamlocate::SteamDir::locate().context("steamlocate couldn't locate Steam")?;
-	match steam_dir.find_app(365360)? {
+	let steam_dir = find_steam()?;
+	match steam_dir.find_app(BB_GAME_ID)? {
 		Some((app, lib)) => Ok(lib.resolve_app_dir(&app)),
 		None => Err(anyhow!("Couldn't locate Battle Brothers")),
 	}
@@ -156,5 +163,37 @@ impl Config {
 
 	pub fn get_steamless_path(&self) -> &Path {
 		&self.steamless_path
+	}
+
+	fn launch_game_from_exe(&self) -> Result<()> {
+		let exe_path = self
+			.get_bb_exe_path()
+			.context("Couldn't find BattleBrothers.exe")?;
+		std::process::Command::new(exe_path.as_ref())
+			.spawn()
+			.context("Couldn't launch Battle Brothers")?;
+		Ok(())
+	}
+
+	pub fn launch_game(&self) -> Result<()> {
+		let found_path = find_bb();
+		let bb_path = self.bb_path.as_ref();
+		match (found_path, bb_path) {
+			(Ok(found_path), Some(bb_path)) => {
+				if &found_path != bb_path {
+					self.launch_game_from_exe()
+				} else {
+					let steam_dir = find_steam()?;
+					let steam_path = steam_dir.path();
+					std::process::Command::new(steam_path.join("steam.exe"))
+						.arg(format!("steam://rungameid/{}", BB_GAME_ID))
+						.spawn()
+						.context("Couldn't Launch Battle Brothers via steam")?;
+					Ok(())
+				}
+			}
+			(_, Some(_)) => self.launch_game_from_exe(),
+			_ => Err(anyhow!("Couldn't find Battle Brothers")),
+		}
 	}
 }
