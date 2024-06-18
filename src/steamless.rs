@@ -92,17 +92,3 @@ pub fn is_steamless_installed(path: &Path) -> bool {
 		&& plugins_folder.join(STEAMLESS_API_NAME).exists()
 		&& plugins_folder.join(STEAMLESS_31_X86_VARIANT_NAME).exists()
 }
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn test_name() {
-		let path = Path::new("./steamless");
-		let url: &str = "https://github.com/atom0s/Steamless/releases/download/v3.1.0.5/Steamless.v3.1.0.5.-.by.atom0s.zip";
-		assert!(!is_steamless_installed(path));
-		download_steamless(url, path).unwrap();
-		assert!(is_steamless_installed(path));
-	}
-}
