@@ -22,7 +22,7 @@ jobs:
         run: npm install
 
       - name: Run TailwindCSS
-        run: npx tailwindcss -i ./input.css -o ./assets/assets/gfx/style/tailwind.css
+        run: npx tailwindcss -i ./input.css -o ./assets/assets/style/tailwind.css
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
