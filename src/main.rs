@@ -7,12 +7,10 @@ use crate::log::{InfoLog, InfoPanel};
 use anyhow::Result;
 use config::Config;
 use dioxus::desktop::tao::platform::windows::WindowBuilderExtWindows;
+use dioxus::desktop::LogicalSize;
 use dioxus::{
 	desktop::{
-		tao::{
-			dpi::{PhysicalSize, Size},
-			window::Icon,
-		},
+		tao::{dpi::Size, window::Icon},
 		WindowBuilder,
 	},
 	prelude::*,
@@ -49,9 +47,9 @@ fn build_window_raw() -> WindowBuilder {
 	WindowBuilder::new()
 		.with_maximizable(false)
 		.with_resizable(false)
-		.with_inner_size(Size::Physical(PhysicalSize {
-			width: 1024,
-			height: 768,
+		.with_inner_size(Size::Logical(LogicalSize {
+			width: 1024.0,
+			height: 768.0,
 		}))
 		.with_title("MSU Launcher")
 }
