@@ -99,10 +99,7 @@ fn Header(style: Option<String>) -> Element {
 		div {
 			class: "w-full flex justify-center items-center relative",
 			style,
-			DonateButton {
-				class: "left-0 top-[50%] absolute h-16",
-				style: "transform: translateY(-50%);"
-			}
+			DonateButton { class: "left-3 top-3 absolute h-16" }
 			h1 { class: "title-font text-6xl", "MSU Launcher" }
 		}
 	}

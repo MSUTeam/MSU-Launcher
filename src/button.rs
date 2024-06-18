@@ -83,13 +83,22 @@ async fn launch_game(config: ReadOnlySignal<Config, SyncStorage>, mut logger: Sy
 }
 
 #[component]
-pub fn DonateButton(class: Option<String>, style: Option<String>) -> Element {
+pub fn DonateButton(
+	#[props(default="".to_string())] class: String,
+	style: Option<String>,
+) -> Element {
 	rsx!(
-		a { href: "https://ko-fi.com/enduriel", class, style,
-			img {
-				class: "h-full w-full",
-				src: "https://storage.ko-fi.com/cdn/brandasset/kofi_bg_tag_dark.png",
-				alt: "Support me on Ko-fi"
+		a { href: "https://ko-fi.com/enduriel",
+			div { class: "rounded-lg w-40 h-16 bg-gray-800 {class}", style,
+				img {
+					class: "left-0 top-[50%] w-[40%] h-[80%] absolute",
+					style: "transform: translateY(-50%);",
+					src: "assets/gfx/icons/kofi.svg"
+				}
+				div { class: "absolute top-1 w-[50%] h-[100%] right-3",
+					div { class: "text-[12px] text-gray-300", "Support me on" }
+					div { class: "text-3xl font-bold text-white", "Ko-fi" }
+				}
 			}
 		}
 	)
