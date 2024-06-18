@@ -1,0 +1,78 @@
+name: Build and Draft Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Run TailwindCSS
+        run: npx tailwindcss -i ./input.css -o ./assets/assets/gfx/style/tailwind.css
+      - run: sudo apt-get update
+      - run: sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev libxdo-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install Dioxus CLI
+        run: cargo install dioxus-cli
+
+      - name: Build Dioxus App
+        run: dx build --release --features bundle
+
+      - name: Package the build artifacts
+        run: |
+          mkdir -p release
+          zip -r release/msu-launcher.zip ./dist
+
+      - name: Upload artifact for release
+        uses: actions/upload-artifact@v4
+        with:
+          name: msu-launcher
+          path: release/msu-launcher.zip
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dioxus-app
+
+      - name: Create Release
+        uses: comnoco/create-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: true
+          prerelease: true
+
+      - name: Upload Release Asset
+        uses: csexton/release-asset-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          release-url: ${{ steps.create_release.outputs.upload_url }}
+          file: release/msu-launcher.zip
