@@ -63,6 +63,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app
+      - run: ls -r
 
       - name: Create Release
         id: create_release
