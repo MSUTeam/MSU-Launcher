@@ -5,6 +5,7 @@ use crate::button::{
 };
 use crate::log::{InfoLog, InfoPanel};
 use anyhow::Result;
+use button::DonateButton;
 use config::Config;
 use dioxus::desktop::tao::platform::windows::WindowBuilderExtWindows;
 use dioxus::desktop::LogicalSize;
@@ -95,7 +96,13 @@ fn main() {
 fn Header(style: Option<String>) -> Element {
 	let style = style.unwrap_or_default();
 	rsx! {
-		div { class: "w-full flex justify-center items-center", style,
+		div {
+			class: "w-full flex justify-center items-center relative",
+			style,
+			DonateButton {
+				class: "left-0 top-[50%] absolute h-16",
+				style: "transform: translateY(-50%);"
+			}
 			h1 { class: "title-font text-6xl", "MSU Launcher" }
 		}
 	}
