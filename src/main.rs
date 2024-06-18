@@ -45,33 +45,51 @@ fn load_png_icon(png_path: &Path) -> Result<Icon> {
 	Ok(icon)
 }
 
+fn build_window_raw() -> WindowBuilder {
+	WindowBuilder::new()
+		.with_maximizable(false)
+		.with_resizable(false)
+		.with_inner_size(Size::Physical(PhysicalSize {
+			width: 1024,
+			height: 768,
+		}))
+		.with_title("MSU Launcher")
+}
+
+#[cfg(feature = "bundle")]
+fn build_window() -> WindowBuilder {
+	build_window_raw()
+		.with_window_icon(Some(
+			load_png_icon(Path::new("./assets/gfx/icons/icon16x16.png")).unwrap(),
+		))
+		.with_taskbar_icon(Some(
+			load_png_icon(Path::new("./assets/gfx/icons/icon32x32.png")).unwrap(),
+		))
+}
+
+#[cfg(not(feature = "bundle"))]
+fn build_window() -> WindowBuilder {
+	build_window_raw()
+		.with_window_icon(Some(
+			load_png_icon(Path::new("./assets/assets/gfx/icons/icon16x16.png")).unwrap(),
+		))
+		.with_taskbar_icon(Some(
+			load_png_icon(Path::new("./assets/assets/gfx/icons/icon32x32.png")).unwrap(),
+		))
+}
+
 fn main() {
 	// Init logger
 	dioxus_logger::init(Level::INFO).expect("failed to init logger");
-	let icon16 = load_png_icon(Path::new("assets/gfx/icons/icon16x16.png"))
-		.expect("Failed to load 16x16 Icon");
-	let icon32 = load_png_icon(Path::new("assets/gfx/icons/icon32x32.png"))
-		.expect("Failed to load 32x32 Icon");
 	let cfg = dioxus::desktop::Config::new()
 		.with_custom_head(
 			r#"
 		<link rel="stylesheet" href="assets/style/tailwind.css">
-		<link rel="stylesheet" href="assets/style/main.css">
+		<link rel="stylesheet" href="assets/main.css">
 		"#
 			.to_string(),
 		)
-		.with_window(
-			WindowBuilder::new()
-				.with_maximizable(false)
-				.with_resizable(false)
-				.with_inner_size(Size::Physical(PhysicalSize {
-					width: 1024,
-					height: 768,
-				}))
-				.with_title("MSU Launcher")
-				.with_window_icon(Some(icon16))
-				.with_taskbar_icon(Some(icon32)),
-		);
+		.with_window(build_window());
 	LaunchBuilder::desktop().with_cfg(cfg).launch(App);
 }
 
@@ -131,8 +149,6 @@ fn Content(style: Option<String>, logger: SyncSignal<InfoLog>) -> Element {
 fn App() -> Element {
 	let logger = use_signal_sync(|| InfoLog::new(100));
 	rsx! {
-		// style { {include_str!("../assets/assets/main.css")} }
-		// based on the position of the gray bar
 		Header { style: "height: 15.7%;" }
 		Content { style: "height: 84.3%;", logger }
 	}

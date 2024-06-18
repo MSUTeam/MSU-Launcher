@@ -14,73 +14,45 @@ body, html {
 	height: 100%;
 	width: 100%;
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	background: url('assets/gfx/background.png')
-}
-
-#links {
-	width: 400px;
-	text-align: left;
-	font-size: x-large;
-	color: white;
-	display: flex;
-	flex-direction: column;
-}
-
-#links a {
-	color: white;
-	text-decoration: none;
-	margin-top: 20px;
-	margin: 10px;
-	border: white 1px solid;
-	border-radius: 5px;
-	padding: 10px;
-}
-
-#links a:hover {
-	background-color: #1f1f1f;
-	cursor: pointer;
-}
-
-#header {
-	max-width: 1200px;
+	background: url('gfx/background.png')
 }
 
 @font-face{
 	font-family: 'FreeUniversal';
-	src: url('assets/gfx/fonts/FreeUniversal-Regular-edited.ttf') format('truetype');
+	src: url('fonts/FreeUniversal-Regular-edited.ttf') format('truetype');
 }
 
 @font-face{
 	font-family: 'Cinzel';
-	src: url('assets/gfx/fonts/Cinzel-Regular.ttf') format('truetype');
+	src: url('fonts/Cinzel-Regular.ttf') format('truetype');
 }
 
 @font-face{
 	font-family: 'Cinzel';
-	src: url('assets/gfx/fonts/Cinzel-Bold.ttf') format('truetype');
+	src: url('fonts/Cinzel-Bold.ttf') format('truetype');
 	font-weight: bold;
 }
 
 .msu-button {
-	border-image-source: url('assets/gfx/button/default.png');
+	border-image-source: url('gfx/button/default.png');
 	border-image-slice: 8 10 11 9 fill;
 	border-image-repeat: stretch;
 	border-width: 8px 10px 11px 9px;
 }
 
 .msu-button:hover {
-	border-image-source: url('assets/gfx/button/hover.png');
+	border-image-source: url('gfx/button/hover.png');
 	text-shadow: 1px 1px #A36426, -1px -1px #000;
 	color: #f0b121;
 }
 
 .msu-button:active {
-	border-image-source: url('assets/gfx/button/active.png');
+	border-image-source: url('gfx/button/active.png');
 	color: #f0b121;
 }
 
 .msu-button:disabled {
-	border-image-source: url('assets/gfx/button/disabled.png');
+	border-image-source: url('gfx/button/disabled.png');
 	color : #a7a7a7;
 	text-shadow: none;
 }
@@ -91,7 +63,7 @@ body, html {
 }
 
 .info-panel {
-	border-image-source: url('assets/gfx/info_panel.png');
+	border-image-source: url('gfx/info_panel.png');
 	border-image-slice: 0 95 0 95 fill;
 	border-image-repeat: stretch;
 	border-width: 0 95px 0 95px;
