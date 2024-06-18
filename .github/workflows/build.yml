@@ -65,14 +65,16 @@ jobs:
           name: msu-launcher
 
       - name: Create Release
-        uses: comnoco/create-release-action@v2
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
+          body: Auto generated release
           draft: true
-          prerelease: true
+          prerelease: false
 
       - name: Upload Release Asset
         uses: csexton/release-asset-action@v3
