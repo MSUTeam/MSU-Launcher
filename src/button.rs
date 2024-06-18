@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
 
 use crate::{patcher_laa, patcher_preload, steamless, Config, InfoLog};
 
