@@ -139,7 +139,7 @@ fn Content(style: Option<String>, logger: SyncSignal<InfoLog>) -> Element {
 			class: "flex flex-col h-full w-full justify-center items-center",
 			style,
 			Center {}
-			InfoPanel { class: "w-[90%] h-12", logger }
+			InfoPanel { class: "w-[90%] h-12 mb-4", logger }
 			ButtonBar { logger }
 		}
 	)
