@@ -1,11 +1,19 @@
-use std::path::{Path, PathBuf};
+use std::{
+	path::{Path, PathBuf},
+	str::FromStr,
+};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
+use crate::steamless;
+
+const STEAMLESS_PATH_DEFAULT: &str = "./steamless";
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
 	bb_path: Option<PathBuf>,
+	steamless_installed: bool,
+	steamless_path: PathBuf,
 }
 
 const CONFIG_FILE: &str = "config.toml";
@@ -55,8 +63,9 @@ impl AsRef<Path> for ExePath {
 impl Default for Config {
 	fn default() -> Self {
 		Self {
-			// bb_path: None,
 			bb_path: find_bb().ok(),
+			steamless_installed: false,
+			steamless_path: PathBuf::from_str(STEAMLESS_PATH_DEFAULT).unwrap(),
 		}
 	}
 }
@@ -73,6 +82,8 @@ impl Config {
 	pub fn from_path(path: PathBuf) -> Self {
 		Self {
 			bb_path: Some(path),
+			steamless_installed: false,
+			steamless_path: PathBuf::from_str(STEAMLESS_PATH_DEFAULT).unwrap(),
 		}
 	}
 
@@ -129,5 +140,21 @@ impl Config {
 		self.save()?;
 
 		Ok(bb_dir)
+	}
+
+	pub fn check_steamless_installed(&mut self) -> bool {
+		if self.steamless_installed {
+			return true;
+		}
+		self.steamless_installed = steamless::is_steamless_installed(&self.steamless_path);
+		self.steamless_installed
+	}
+
+	pub fn is_steamless_installed(&self) -> bool {
+		self.steamless_installed
+	}
+
+	pub fn get_steamless_path(&self) -> &Path {
+		&self.steamless_path
 	}
 }

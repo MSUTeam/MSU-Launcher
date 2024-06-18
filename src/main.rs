@@ -26,6 +26,7 @@ mod config;
 mod log;
 mod patcher_laa;
 mod patcher_preload;
+mod steamless;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 enum Route {

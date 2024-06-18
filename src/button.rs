@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use std::{path::PathBuf, process::Command};
 
-use crate::{patcher_laa, patcher_preload, Config, InfoLog};
+use crate::{patcher_laa, patcher_preload, steamless, Config, InfoLog};
 
 #[component]
 pub fn Button(
@@ -145,6 +145,7 @@ pub fn Run4GBPatcherButton(
 	config: ReadOnlySignal<Config, SyncStorage>,
 	logger: SyncSignal<InfoLog>,
 ) -> Element {
+	config.with_mut(|c| c.check_steamless_installed());
 	rsx!(
 		Button {
 			class,
@@ -152,10 +153,25 @@ pub fn Run4GBPatcherButton(
 			disabled: use_memo(move || !config.read().bb_path_known()),
 			onclick: move |_| {
 			    spawn(async move {
-			        let _ = patcher_laa::patch_from_config(config, logger);
+			        let steamless_installed = config
+			            .with_mut(|c| { c.check_steamless_installed() });
+			        if steamless_installed {
+			            let _ = patcher_laa::patch_from_config(config.into(), logger);
+			        } else {
+			            let _ = steamless::mt_download_steamless_from_config(config, logger)
+			                .await;
+			        }
 			    });
 			},
-			"Run 4GB Patcher"
+			{
+				use_memo(move || {
+					if config.read().is_steamless_installed() {
+						"Run 4GB Patcher"
+					} else {
+						"Install Steamless by atom0s for 4GB Patcher"
+					}
+				})
+			}
 		}
 	)
 }
