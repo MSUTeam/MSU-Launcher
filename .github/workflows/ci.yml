@@ -20,6 +20,9 @@ jobs:
         toolchain: stable
         override: true
 
+    - name: Install gdk-sys
+      run: sudo apt-get install libgtk-3-dev
+
     - name: Install clippy
       run: rustup component add clippy
 
