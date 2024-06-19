@@ -35,9 +35,9 @@ body, html {
 
 .msu-button {
 	border-image-source: url('gfx/button/default.png');
-	border-image-slice: 8 10 11 9 fill;
+	border-image-slice: 12 12 10 13 fill;
 	border-image-repeat: stretch;
-	border-width: 8px 10px 11px 9px;
+	border-width: 11px 12px 9px 13px;
 }
 
 .msu-button:hover {
