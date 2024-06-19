@@ -151,7 +151,7 @@ fn Content(style: Option<String>, logger: SyncSignal<InfoLog>) -> Element {
 fn App() -> Element {
 	let logger = use_signal_sync(|| InfoLog::new(100));
 	rsx! {
-		Header { style: "height: 15.7%;" }
-		Content { style: "height: 84.3%;", logger }
+		Header { style: "height: 10.4%;" }
+		Content { style: "height: 89.6%;", logger }
 	}
 }
