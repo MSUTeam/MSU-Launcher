@@ -1,6 +1,6 @@
 [package]
 name = "msu-launcher"
-version = "0.2.0"
+version = "0.3.0-rc.1"
 authors = ["Enduriel <endur1el@protonmail.com>"]
 edition = "2021"
 
