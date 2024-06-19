@@ -64,6 +64,12 @@ jobs:
         with:
           name: app
 
+      - name: Calculate Hash
+        id: calculate_hash
+        run: |
+            HASH=$(sha256sum msu-launcher.zip | awk '{ print $1 }')
+            echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -74,7 +80,7 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           body: |
             Auto generated release
-            msu-launcher.zip SHA256 hash: ${{ hashFiles('msu-launcher.zip') }}`
+            msu-launcher.zip SHA256 hash: `${{ steps.calculate_hash.outputs.hash }}`
           draft: true
           prerelease: false
 
