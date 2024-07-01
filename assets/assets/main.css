@@ -70,6 +70,7 @@ body, html {
 }
 
 .title-font {
+	user-select: none;
 	font-family: 'Cinzel', monospace;
 	color: #dda21f;
 	text-shadow: 2px 2px rgba(0, 0, 0, 128), -2px -2px #000;
