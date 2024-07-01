@@ -7,7 +7,7 @@ use crate::log::{InfoLog, InfoPanel};
 use anyhow::Result;
 use button::DonateButton;
 use config::Config;
-use dioxus::desktop::tao::platform::windows::WindowBuilderExtWindows;
+use dioxus::desktop::tao::platform::windows::{IconExtWindows, WindowBuilderExtWindows};
 use dioxus::desktop::LogicalSize;
 use dioxus::{
 	desktop::{
@@ -16,9 +16,6 @@ use dioxus::{
 	},
 	prelude::*,
 };
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
 use tracing::Level;
 mod button;
 mod config;
@@ -33,18 +30,12 @@ enum Route {
 	App {},
 }
 
-// I shouldn't have to do this but this is the only cross-platform way of doing this I could find
-fn load_png_icon(png_path: &Path) -> Result<Icon> {
-	let mut image_reader = image::io::Reader::new(BufReader::new(File::open(png_path)?));
-	image_reader.set_format(image::ImageFormat::Png);
-	let rgba_image = image_reader.decode()?.into_rgba8();
-	let rgba_bytes = rgba_image.into_raw();
-	let dimensions = ((rgba_bytes.len() / 4) as f64).sqrt() as u32;
-	let icon = Icon::from_rgba(rgba_bytes, dimensions, dimensions)?;
-	Ok(icon)
-}
+#[cfg(feature = "bundle")]
+const ASSETS: &str = "assets";
+#[cfg(not(feature = "bundle"))]
+const ASSETS: &str = "assets/assets";
 
-fn build_window_raw() -> WindowBuilder {
+fn build_window() -> WindowBuilder {
 	WindowBuilder::new()
 		.with_maximizable(false)
 		.with_resizable(false)
@@ -53,28 +44,20 @@ fn build_window_raw() -> WindowBuilder {
 			height: 768.0,
 		}))
 		.with_title("MSU Launcher")
-}
-
-#[cfg(feature = "bundle")]
-fn build_window() -> WindowBuilder {
-	build_window_raw()
-		.with_window_icon(Some(
-			load_png_icon(Path::new("./assets/gfx/icons/icon16x16.png")).unwrap(),
-		))
-		.with_taskbar_icon(Some(
-			load_png_icon(Path::new("./assets/gfx/icons/icon32x32.png")).unwrap(),
-		))
-}
-
-#[cfg(not(feature = "bundle"))]
-fn build_window() -> WindowBuilder {
-	build_window_raw()
-		.with_window_icon(Some(
-			load_png_icon(Path::new("./assets/assets/gfx/icons/icon16x16.png")).unwrap(),
-		))
-		.with_taskbar_icon(Some(
-			load_png_icon(Path::new("./assets/assets/gfx/icons/icon32x32.png")).unwrap(),
-		))
+		.with_window_icon(
+			Icon::from_path(
+				format!("{}/gfx/icons/msu_logo.ico", ASSETS),
+				Some([16, 16].into()),
+			)
+			.ok(),
+		)
+		.with_taskbar_icon(
+			Icon::from_path(
+				format!("{}/gfx/icons/msu_logo.ico", ASSETS),
+				Some([32, 32].into()),
+			)
+			.ok(),
+		)
 }
 
 fn main() {
