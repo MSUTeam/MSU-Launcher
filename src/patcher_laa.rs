@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::log::InfoLog;
 use anyhow::{anyhow, Context, Result};
 use dioxus::prelude::*;
 use sha2::{Digest, Sha256};
@@ -183,25 +182,22 @@ pub fn patch_exe(exe_path: &Path) -> Result<String> {
 	}
 }
 
-pub fn patch_from_config(
-	config: ReadOnlySignal<Config, SyncStorage>,
-	mut logger: SyncSignal<InfoLog>,
-) -> Result<String> {
+pub fn patch_from_config(config: ReadOnlySignal<Config, SyncStorage>) -> Result<()> {
 	let exe_path = match config.read().get_bb_exe_path() {
 		Some(path) => path,
 		None => {
 			let error = "Couldn't find BattleBrothers.exe";
-			logger.with_mut(|l| l.error(error));
+			tracing::error!("{}", error);
 			return Err(anyhow!(error));
 		}
 	};
 	match patch_exe(exe_path.as_ref()) {
 		Ok(msg) => {
-			logger.with_mut(|l| l.info(msg.clone()));
-			Ok(msg)
+			tracing::info!("{}", msg);
+			Ok(())
 		}
 		Err(e) => {
-			logger.with_mut(|l| l.error(&e.to_string()));
+			tracing::error!("{}", e.to_string());
 			Err(e)
 		}
 	}

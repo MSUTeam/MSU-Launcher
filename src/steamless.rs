@@ -8,7 +8,7 @@ use std::{
 };
 use zip::ZipArchive;
 
-use crate::{config::Config, log::InfoLog};
+use crate::config::Config;
 
 const STEAMLESS_CLI: &str = "Steamless.CLI.exe";
 const STEAMLESS_PLUGIN_FOLDER: &str = "Plugins";
@@ -53,35 +53,25 @@ async fn download_steamless(url: &str, target_path: &Path) -> Result<()> {
 	Ok(())
 }
 
-async fn download_steamless_from_config(
-	mut config: SyncSignal<Config>,
-	mut logger: SyncSignal<InfoLog>,
-) -> Result<String> {
+async fn download_steamless_from_config(mut config: SyncSignal<Config>) -> Result<()> {
 	let path = config.with(|c| c.get_steamless_path().to_owned());
 	let result = download_steamless(ZIP_URL, &path).await;
 	if let Err(e) = result {
-		logger.with_mut(|l| {
-			l.error(format!("Failed to download steamless: {}", e));
-		});
+		tracing::error!("Failed to download steamless: {}", e);
 		Err(e)
 	} else {
 		let info = "Successfully installed steamless, ready to apply 4GB patch";
 		config.with_mut(|c| {
 			c.check_steamless_installed();
 		});
-		logger.with_mut(|l| {
-			l.info(info);
-		});
-		Ok(info.to_string())
+		tracing::info!("{}", info);
+		Ok(())
 	}
 }
 
-pub async fn mt_download_steamless_from_config(
-	config: SyncSignal<Config>,
-	logger: SyncSignal<InfoLog>,
-) {
+pub async fn mt_download_steamless_from_config(config: SyncSignal<Config>) {
 	let _ = tokio::spawn(async move {
-		let _ = download_steamless_from_config(config, logger).await;
+		let _ = download_steamless_from_config(config).await;
 	})
 	.await;
 }

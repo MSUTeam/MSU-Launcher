@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use dioxus::signals::{ReadOnlySignal, Readable, SyncSignal, SyncStorage, Writable};
+use dioxus::signals::{ReadOnlySignal, Readable, SyncStorage};
 use std::collections::HashSet;
 use std::io::Write;
 use std::{fs::File, io::Read, path::Path};
@@ -7,7 +7,6 @@ use zip::ZipArchive;
 use zip::{write::SimpleFileOptions, CompressionMethod};
 
 use crate::config::{Config, DataPath};
-use crate::log::InfoLog;
 
 const TABBED_NEWLINE: &str = "\n\t\t\t";
 
@@ -170,36 +169,24 @@ pub fn sync_gather_and_create_mod(data_path: &DataPath) -> Result<()> {
 	create_mod(data_path, &resources)
 }
 
-pub async fn async_gather_and_create_mod(
-	config: ReadOnlySignal<Config, SyncStorage>,
-	mut logger: SyncSignal<InfoLog>,
-) {
+pub async fn async_gather_and_create_mod(config: ReadOnlySignal<Config, SyncStorage>) {
 	let data_path = match config.read().get_bb_data_path() {
 		Some(path) => path,
 		None => {
-			logger.with_mut(|l| {
-				l.error("Couldn't find /data folder");
-			});
+			tracing::error!("Couldn't find /data folder");
 			return;
 		}
 	};
 	match sync_gather_and_create_mod(&data_path) {
 		Ok(_) => {
-			logger.with_mut(|l| {
-				l.info("Patcher Succeeded");
-			});
+			tracing::info!("Patcher Succeeded");
 		}
 		Err(e) => {
-			logger.with_mut(|l| {
-				l.error(format!("Couldn't create patcher : {}", e));
-			});
+			tracing::error!("Patcher failed: {}", e);
 		}
 	}
 }
 
-pub async fn mt_gather_and_create_mod(
-	config: ReadOnlySignal<Config, SyncStorage>,
-	logger: SyncSignal<InfoLog>,
-) {
-	let _ = tokio::spawn(async move { async_gather_and_create_mod(config, logger).await }).await;
+pub async fn mt_gather_and_create_mod(config: ReadOnlySignal<Config, SyncStorage>) {
+	let _ = tokio::spawn(async move { async_gather_and_create_mod(config).await }).await;
 }

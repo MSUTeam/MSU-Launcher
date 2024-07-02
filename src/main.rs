@@ -3,7 +3,7 @@
 use crate::button::{
 	LaunchButton, Run4GBPatcherButton, RunPreloadPatcherButton, SetGameLocationButton,
 };
-use crate::log::{InfoLog, InfoPanel};
+use crate::log::InfoPanel;
 use anyhow::Result;
 use button::DonateButton;
 use config::Config;
@@ -16,7 +16,6 @@ use dioxus::{
 	},
 	prelude::*,
 };
-use tracing::Level;
 mod button;
 mod config;
 mod log;
@@ -62,7 +61,8 @@ fn build_window() -> WindowBuilder {
 
 fn main() {
 	// Init logger
-	dioxus_logger::init(Level::INFO).expect("failed to init logger");
+	once_cell::sync::Lazy::force(&log::TRACING);
+	tracing::info!("Starting MSU Launcher");
 	let cfg = dioxus::desktop::Config::new()
 		.with_custom_head(
 			r#"
@@ -98,43 +98,38 @@ fn Center() -> Element {
 }
 
 #[component]
-fn ButtonBar(logger: SyncSignal<InfoLog>) -> Element {
+fn ButtonBar() -> Element {
 	let config = use_signal_sync(Config::load_or_default);
 	rsx!(
 		div { class: "flex h-fit justify-between items-center space-x-2 w-[90%]",
-			SetGameLocationButton { class: "p-1 text-xl normal-font", config, logger }
-			LaunchButton {
-				class: "flex-grow h-full text-4xl title-font",
-				config,
-				logger
-			}
+			SetGameLocationButton { class: "p-1 text-xl normal-font", config }
+			LaunchButton { class: "flex-grow h-full text-4xl title-font", config }
 			div { class: "flex flex-col space-y-1",
-				RunPreloadPatcherButton { class: "p-1 h-1/2 text-xl normal-font", config, logger }
-				Run4GBPatcherButton { class: "p-1 h-1/2 text-xl normal-font", config, logger }
+				RunPreloadPatcherButton { class: "p-1 h-1/2 text-xl normal-font", config }
+				Run4GBPatcherButton { class: "p-1 h-1/2 text-xl normal-font", config }
 			}
 		}
 	)
 }
 
 #[component]
-fn Content(style: Option<String>, logger: SyncSignal<InfoLog>) -> Element {
+fn Content(style: Option<String>) -> Element {
 	let style = style.unwrap_or_default();
 	rsx!(
 		div {
 			class: "flex flex-col h-full w-full justify-center items-center",
 			style,
 			Center {}
-			InfoPanel { class: "w-[90%] h-12 mb-4", logger }
-			ButtonBar { logger }
+			InfoPanel { class: "w-[90%] h-12 mb-4" }
+			ButtonBar {}
 		}
 	)
 }
 
 #[component]
 fn App() -> Element {
-	let logger = use_signal_sync(|| InfoLog::new(100));
 	rsx! {
 		Header { style: "height: 10.4%;" }
-		Content { style: "height: 89.6%;", logger }
+		Content { style: "height: 89.6%;" }
 	}
 }

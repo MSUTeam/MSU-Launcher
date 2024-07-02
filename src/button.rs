@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use std::path::PathBuf;
 
-use crate::{patcher_laa, patcher_preload, steamless, Config, InfoLog};
+use crate::{patcher_laa, patcher_preload, steamless, Config};
 
 #[component]
 pub fn Button(
@@ -45,7 +45,6 @@ pub fn ConfigButton(
 	class: Option<String>,
 	style: Option<String>,
 	config: SyncSignal<Config>,
-	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	let mut counter: i32 = 0;
 	rsx!(
@@ -53,33 +52,22 @@ pub fn ConfigButton(
 			class,
 			style,
 			onclick: move |_| {
-			    println!("Config");
-			    logger
-			        .with_mut(|l| {
-			            l.info(format!("Config! {}", counter));
-			            counter += 1;
-			            l.error(format!("Config! {}", counter));
-			        })
+				println!("Config");
+				tracing::info!("Config! {}", counter);
+				counter += 1;
+				tracing::error!("Config! {}", counter);
 			},
 			"Config"
 		}
 	)
 }
 
-async fn launch_game(config: ReadOnlySignal<Config, SyncStorage>, mut logger: SyncSignal<InfoLog>) {
-	patcher_preload::async_gather_and_create_mod(config, logger).await;
+async fn launch_game(config: ReadOnlySignal<Config, SyncStorage>) {
+	patcher_preload::async_gather_and_create_mod(config).await;
 	match config.read().launch_game() {
-		Ok(_) => {
-			logger.with_mut(|l| {
-				l.info("Launched Battle Brothers");
-			});
-		}
-		Err(e) => {
-			logger.with_mut(|l| {
-				l.error(format!("Couldn't launch Battle Brothers: {}", e));
-			});
-		}
-	}
+		Ok(_) => tracing::info!("Launched Battle Brothers"),
+		Err(e) => tracing::error!("Couldn't launch Battle Brothers: {}", e),
+	};
 }
 
 #[component]
@@ -109,7 +97,6 @@ pub fn LaunchButton(
 	class: Option<String>,
 	style: Option<String>,
 	config: ReadOnlySignal<Config, SyncStorage>,
-	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	rsx!(
 		Button {
@@ -117,12 +104,12 @@ pub fn LaunchButton(
 			style,
 			disabled: use_memo(move || !config.read().bb_path_known()),
 			onclick: move |_| {
-			    spawn(async move {
-			        let _ = tokio::spawn(async move {
-			                launch_game(config, logger).await;
-			            })
-			            .await;
-			    });
+				spawn(async move {
+					let _ = tokio::spawn(async move {
+							launch_game(config).await;
+						})
+						.await;
+				});
 			},
 			"Launch Battle Brothers"
 		}
@@ -134,7 +121,6 @@ pub fn RunPreloadPatcherButton(
 	class: Option<String>,
 	style: Option<String>,
 	config: ReadOnlySignal<Config, SyncStorage>,
-	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	rsx!(
 		Button {
@@ -142,9 +128,7 @@ pub fn RunPreloadPatcherButton(
 			style,
 			disabled: use_memo(move || !config.read().bb_path_known()),
 			onclick: move |_| {
-			    spawn(async move {
-			        patcher_preload::mt_gather_and_create_mod(config, logger).await
-			    });
+				spawn(async move { patcher_preload::mt_gather_and_create_mod(config).await });
 			},
 			"Run Preload Patcher"
 		}
@@ -156,7 +140,6 @@ pub fn Run4GBPatcherButton(
 	class: Option<String>,
 	style: Option<String>,
 	config: SyncSignal<Config>,
-	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	config.with_mut(|c| c.check_steamless_installed());
 	rsx!(
@@ -165,16 +148,15 @@ pub fn Run4GBPatcherButton(
 			style,
 			disabled: use_memo(move || !config.read().bb_path_known()),
 			onclick: move |_| {
-			    spawn(async move {
-			        let steamless_installed = config
-			            .with_mut(|c| { c.check_steamless_installed() });
-			        if steamless_installed {
-			            let _ = patcher_laa::patch_from_config(config.into(), logger);
-			        } else {
-			            let _ = steamless::mt_download_steamless_from_config(config, logger)
-			                .await;
-			        }
-			    });
+				spawn(async move {
+					let steamless_installed = config
+						.with_mut(|c| { c.check_steamless_installed() });
+					if steamless_installed {
+						let _ = patcher_laa::patch_from_config(config.into());
+					} else {
+						let _ = steamless::mt_download_steamless_from_config(config).await;
+					}
+				});
 			},
 			{
 				use_memo(move || {
@@ -189,33 +171,21 @@ pub fn Run4GBPatcherButton(
 	)
 }
 
-fn set_game_location_from_files(
-	mut config: SyncSignal<Config>,
-	mut logger: SyncSignal<InfoLog>,
-	e: Event<FormData>,
-) {
+fn set_game_location_from_files(mut config: SyncSignal<Config>, e: Event<FormData>) {
 	if let Some(files) = &e.files() {
 		let files = files.files();
 		if let Some(file) = files.first() {
 			let exe_path = PathBuf::from(file);
-			config.with_mut(move |c| {
-				logger.with_mut(move |l| {
-					match c.set_path_from_exe(&exe_path) {
-						Ok(path) => l.info(format!("Set game location to {}", path.display())),
-						Err(e) => l.error(format!("Failed to set game location: {:?}", e)),
-					};
-				})
+			config.with_mut(move |c| match c.set_path_from_exe(&exe_path) {
+				Ok(path) => tracing::info!("Set game location to {}", path.display()),
+				Err(e) => tracing::error!("Failed to set game location: {:?}", e),
 			});
 		}
 	}
 }
 
 #[component]
-pub fn SetGameLocationInput(
-	config: SyncSignal<Config>,
-	logger: SyncSignal<InfoLog>,
-	id: String,
-) -> Element {
+pub fn SetGameLocationInput(config: SyncSignal<Config>, id: String) -> Element {
 	rsx!(
 		input {
 			id,
@@ -223,7 +193,7 @@ pub fn SetGameLocationInput(
 			accept: ".exe",
 			multiple: "false",
 			hidden: true,
-			onchange: move |e| { set_game_location_from_files(config, logger, e) },
+			onchange: move |e| { set_game_location_from_files(config, e) },
 			"Set Game Location"
 		}
 	)
@@ -234,17 +204,16 @@ pub fn SetGameLocationButton(
 	class: Option<String>,
 	style: Option<String>,
 	config: SyncSignal<Config>,
-	logger: SyncSignal<InfoLog>,
 ) -> Element {
 	// this hack is necessary to use the hidden input pattern
 	let id = "hidden-input-id";
 	rsx!(
-		SetGameLocationInput { config, logger, id: id.to_string() }
+		SetGameLocationInput { config, id: id.to_string() }
 		Button {
 			class,
 			style,
 			onclick: move |_| {
-			    eval(&format!("document.getElementById('{}').click();", id));
+				eval(&format!("document.getElementById('{}').click();", id));
 			},
 			"Set Game Location"
 		}
