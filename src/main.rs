@@ -4,6 +4,7 @@ use crate::button::{
 	LaunchButton, Run4GBPatcherButton, RunPreloadPatcherButton, SetGameLocationButton,
 };
 use crate::log::InfoPanel;
+use crate::update::UpdateButton;
 use anyhow::Result;
 use button::DonateButton;
 use config::Config;
@@ -22,6 +23,7 @@ mod log;
 mod patcher_laa;
 mod patcher_preload;
 mod steamless;
+mod update;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 enum Route {
@@ -83,6 +85,7 @@ fn Header(style: Option<String>) -> Element {
 			class: "w-full flex justify-center items-center relative",
 			style,
 			DonateButton { class: "left-3 top-3 absolute" }
+			UpdateButton { class: "right-3 top-3 h-16 absolute normal-font max-w-52" }
 			h1 { class: "title-font text-6xl", "MSU Launcher" }
 		}
 	}
