@@ -34,8 +34,9 @@ jobs:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: Install Dioxus CLI
-        run: cargo install dioxus-cli
+      - uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: dioxus-cli@0.5
 
       - name: Build Dioxus App
         run: dx build --release --features bundle --target x86_64-pc-windows-msvc
