@@ -41,6 +41,9 @@ jobs:
       - name: Build Dioxus App
         run: dx build --release --features bundle --target x86_64-pc-windows-msvc
 
+      - name: Remove unnecessary files
+        run: rm dist/__assets_head.html && rm dist/index.html # these are dioxus build artifacts unnecessary for the desktop build
+
       - name: Package the build artifacts
         run: |
           mkdir -p release
