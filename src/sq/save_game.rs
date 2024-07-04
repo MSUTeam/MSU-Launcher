@@ -152,7 +152,7 @@ mod tests {
 
 	use super::*;
 	use crate::sq::shared::test_readable_writable_impls;
-	use crate::sq::SQTable;
+	use crate::sq::sq_value::SQTable;
 
 	#[test]
 	fn read_write_save_game() {
