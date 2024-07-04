@@ -22,6 +22,7 @@ mod config;
 mod log;
 mod patcher_laa;
 mod patcher_preload;
+mod sq;
 mod steamless;
 mod update;
 
