@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use bytes::Buf;
 use chrono::{NaiveDateTime, Timelike};
 
@@ -56,22 +56,21 @@ impl Readable for SaveGame {
 	where
 		Self: Sized,
 	{
-		let magic_num = reader.read_u16::<LittleEndian>()?;
-		let layout_version = reader.read_u8()?;
-		let serialization_version = reader.read_i32::<LittleEndian>()?;
+		let magic_num = u16::from_reader(reader)?;
+		let layout_version = u8::from_reader(reader)?;
+		let serialization_version = i32::from_reader(reader)?;
 
 		let creation_date = NaiveDateTime::from_reader(reader)?;
 		let modification_date = NaiveDateTime::from_reader(reader)?;
 		let file_name = String::from_reader(reader)?;
 
 		let mut meta_data = HashMap::new();
-		for _ in 0..reader.read_u16::<LittleEndian>()? {
+		for _ in 0..u16::from_reader(reader)? {
 			let key = String::from_reader(reader)?;
 			let value = String::from_reader(reader)?;
 			meta_data.insert(key, value);
 		}
-
-		let magic_num_2 = reader.read_u16::<LittleEndian>()?;
+		let magic_num_2 = u16::from_reader(reader)?;
 
 		let mut raw_data = Vec::new();
 		reader.read_to_end(&mut raw_data)?;
@@ -92,21 +91,22 @@ impl Readable for SaveGame {
 
 impl Writable for SaveGame {
 	fn write_into<W: std::io::Write + WriteBytesExt>(&self, writer: &mut W) -> anyhow::Result<()> {
-		writer.write_u16::<LittleEndian>(self.magic_num)?;
-		writer.write_u8(self.layout_version)?;
-		writer.write_i32::<LittleEndian>(self.serialization_version)?;
+		self.magic_num.write_into(writer)?;
+		self.layout_version.write_into(writer)?;
+		self.serialization_version.write_into(writer)?;
 
 		self.creation_date.write_into(writer)?;
 		self.modification_date.write_into(writer)?;
 
 		self.file_name.write_into(writer)?;
 
-		writer.write_u16::<LittleEndian>(self.meta_data.len().try_into()?)?;
+		TryInto::<u16>::try_into(self.meta_data.len())?.write_into(writer)?;
 		for (key, value) in &self.meta_data {
 			key.write_into(writer)?;
 			value.write_into(writer)?;
 		}
-		writer.write_u16::<LittleEndian>(self.magic_num_2)?;
+
+		self.magic_num_2.write_into(writer)?;
 
 		writer.write_all(&self.raw_data)?;
 

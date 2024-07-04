@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 
 use anyhow::{anyhow, Result};
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use ordered_float::OrderedFloat;
 
 use super::{
@@ -23,7 +23,7 @@ pub struct MetaDataEmulator {
 impl Readable for MetaDataEmulator {
 	fn from_reader<R: Read + ReadBytesExt>(reader: &mut R) -> Result<Self> {
 		Ok(Self {
-			version: reader.read_u8()?,
+			version: u8::from_reader(reader)?,
 			name: String::from_reader(reader)?,
 			file_name: String::from_reader(reader)?,
 			creation_date: String::from_reader(reader)?,
@@ -35,7 +35,7 @@ impl Readable for MetaDataEmulator {
 
 impl Writable for MetaDataEmulator {
 	fn write_into<W: Write + WriteBytesExt>(&self, writer: &mut W) -> Result<()> {
-		writer.write_u8(self.version)?;
+		self.version.write_into(writer)?;
 		self.name.write_into(writer)?;
 		self.file_name.write_into(writer)?;
 		self.creation_date.write_into(writer)?;
@@ -65,56 +65,53 @@ pub enum SerializedSQValue {
 	Serialized(Vec<SerializedSQValue>, MetaDataEmulator),
 }
 
+impl SerializedSQValue {
+	fn get_type(&self) -> u8 {
+		match self {
+			Self::None => 0,
+			Self::Unknown => 1,
+			Self::Null => 2,
+			Self::Bool(_) => 3,
+			Self::String(_) => 4,
+			Self::U8(_) => 5,
+			Self::U16(_) => 6,
+			Self::U32(_) => 7,
+			Self::I8(_) => 8,
+			Self::I16(_) => 9,
+			Self::I32(_) => 10,
+			Self::Float(_) => 11,
+			Self::Table(_) => 12,
+			Self::Array(_) => 13,
+			Self::Serialized(_, _) => 14,
+		}
+	}
+}
+
 impl Readable for SerializedSQValue {
 	fn from_reader<R: Read + ReadBytesExt>(reader: &mut R) -> Result<Self>
 	where
 		Self: Sized,
 	{
-		let sq_type = reader.read_u8()?;
+		let sq_type = u8::from_reader(reader)?;
 		match sq_type {
 			0 => Ok(Self::None),
 			1 => Ok(Self::Unknown),
 			2 => Ok(Self::Null),
-			3 => Ok(Self::Bool(reader.read_u8()? != 0)),
+			3 => Ok(Self::Bool(bool::from_reader(reader)?)),
 			4 => Ok(Self::String(String::from_reader(reader)?)),
-			5 => Ok(Self::U8(reader.read_u8()?)),
-			6 => Ok(Self::U16(reader.read_u16::<LittleEndian>()?)),
-			7 => Ok(Self::U32(reader.read_u32::<LittleEndian>()?)),
-			8 => Ok(Self::I8(reader.read_i8()?)),
-			9 => Ok(Self::I16(reader.read_i16::<LittleEndian>()?)),
-			10 => Ok(Self::I32(reader.read_i32::<LittleEndian>()?)),
-			11 => Ok(Self::Float(OrderedFloat(
-				reader.read_f32::<LittleEndian>()?,
-			))),
-			12..=14 => {
-				let len = SerializedSQValue::from_reader(reader)?;
-				let len = len.try_into()?;
-				if let SQValue::Int(len) = len {
-					if sq_type == 12 {
-						let mut table = Vec::new();
-						let len = len / 2; // in sq they are serialized individually
-						for _ in 0..len {
-							table.push((Self::from_reader(reader)?, Self::from_reader(reader)?));
-						}
-						Ok(Self::Table(table))
-					} else {
-						let mut array = Vec::new();
-						for _ in 0..len {
-							array.push(SerializedSQValue::from_reader(reader)?);
-						}
-						if sq_type == 13 {
-							Ok(Self::Array(array))
-						} else {
-							let meta_data = MetaDataEmulator::from_reader(reader)?;
-							Ok(Self::Serialized(array, meta_data))
-						}
-					}
-				} else {
-					Err(anyhow!(
-						"Invalid SerializedSQValue for collection length {:?}",
-						len
-					))
-				}
+			5 => Ok(Self::U8(u8::from_reader(reader)?)),
+			6 => Ok(Self::U16(u16::from_reader(reader)?)),
+			7 => Ok(Self::U32(u32::from_reader(reader)?)),
+			8 => Ok(Self::I8(i8::from_reader(reader)?)),
+			9 => Ok(Self::I16(i16::from_reader(reader)?)),
+			10 => Ok(Self::I32(i32::from_reader(reader)?)),
+			11 => Ok(Self::Float(OrderedFloat(f32::from_reader(reader)?))),
+			12 => Ok(Self::Table(Vec::from_reader(reader)?)),
+			13 => Ok(Self::Array(Vec::from_reader(reader)?)),
+			14 => {
+				let array = Vec::from_reader(reader)?;
+				let meta_data = MetaDataEmulator::from_reader(reader)?;
+				Ok(Self::Serialized(array, meta_data))
 			}
 			_ => Err(anyhow!("Invalid SerializedSQValue")),
 		}
@@ -123,70 +120,24 @@ impl Readable for SerializedSQValue {
 
 impl Writable for SerializedSQValue {
 	fn write_into<W: Write + WriteBytesExt>(&self, writer: &mut W) -> Result<()> {
+		self.get_type().write_into(writer)?;
 		match self {
-			Self::None => writer.write_u8(0)?,
-			Self::Unknown => writer.write_u8(1)?,
-			Self::Null => writer.write_u8(2)?,
-			Self::Bool(b) => {
-				writer.write_u8(3)?;
-				writer.write_u8(if *b { 1 } else { 0 })?;
-			}
-			Self::String(s) => {
-				writer.write_u8(4)?;
-				s.write_into(writer)?;
-			}
-			Self::U8(u) => {
-				writer.write_u8(5)?;
-				writer.write_u8(*u)?;
-			}
-			Self::U16(u) => {
-				writer.write_u8(6)?;
-				writer.write_u16::<LittleEndian>(*u)?;
-			}
-			Self::U32(u) => {
-				writer.write_u8(7)?;
-				writer.write_u32::<LittleEndian>(*u)?;
-			}
-			Self::I8(i) => {
-				writer.write_u8(8)?;
-				writer.write_i8(*i)?;
-			}
-			Self::I16(i) => {
-				writer.write_u8(9)?;
-				writer.write_i16::<LittleEndian>(*i)?;
-			}
-			Self::I32(i) => {
-				writer.write_u8(10)?;
-				writer.write_i32::<LittleEndian>(*i)?;
-			}
-			Self::Float(f) => {
-				writer.write_u8(11)?;
-				writer.write_f32::<LittleEndian>(f.into_inner())?;
-			}
-			Self::Table(t) => {
-				writer.write_u8(12)?;
-				Into::<SerializedSQValue>::into(SQValue::Int((t.len() * 2).try_into()?))
-					.write_into(writer)?;
-				for (key, value) in t {
-					key.write_into(writer)?;
-					value.write_into(writer)?;
-				}
-			}
-			Self::Array(a) => {
-				writer.write_u8(13)?;
-				Into::<SerializedSQValue>::into(SQValue::Int(a.len().try_into()?))
-					.write_into(writer)?;
-				for value in a {
-					value.write_into(writer)?;
-				}
-			}
+			Self::None => {}
+			Self::Unknown => {}
+			Self::Null => {}
+			Self::Bool(b) => b.write_into(writer)?,
+			Self::String(s) => s.write_into(writer)?,
+			Self::U8(u) => u.write_into(writer)?,
+			Self::U16(u) => u.write_into(writer)?,
+			Self::U32(u) => u.write_into(writer)?,
+			Self::I8(i) => i.write_into(writer)?,
+			Self::I16(i) => i.write_into(writer)?,
+			Self::I32(i) => i.write_into(writer)?,
+			Self::Float(f) => f.write_into(writer)?,
+			Self::Table(t) => t.write_into(writer)?,
+			Self::Array(a) => a.write_into(writer)?,
 			Self::Serialized(a, meta_emu) => {
-				writer.write_u8(14)?;
-				Into::<SerializedSQValue>::into(SQValue::Int(a.len().try_into()?))
-					.write_into(writer)?;
-				for value in a {
-					value.write_into(writer)?;
-				}
+				a.write_into(writer)?;
 				meta_emu.write_into(writer)?;
 			}
 		};

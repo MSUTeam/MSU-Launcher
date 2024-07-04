@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use ordered_float::OrderedFloat;
 
 use super::serialized_sq_value::SerializedSQValue;
@@ -73,13 +73,11 @@ impl TryFrom<SerializedSQValue> for SQValue {
 				}
 				Self::Table(table)
 			}
-			SerializedSQValue::Array(a) => {
-				let mut array = Vec::new();
-				for value in a {
-					array.push(value.try_into()?);
-				}
-				Self::Array(array)
-			}
+			SerializedSQValue::Array(a) => Self::Array(
+				a.into_iter()
+					.map(|value| value.try_into())
+					.collect::<Result<Vec<SQValue>>>()?,
+			),
 			SerializedSQValue::Serialized(..) => {
 				return Err(anyhow!("Tried to convert Serialized Value"))
 			}
