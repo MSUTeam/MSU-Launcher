@@ -114,6 +114,7 @@ impl Writable for SaveGame {
 	}
 }
 
+#[allow(dead_code)] // temporary so clippy doesn't complain
 impl SaveGame {
 	pub fn with_name<S: Into<String>>(mut self, file_name: S) -> Self {
 		self.file_name = file_name.into();
