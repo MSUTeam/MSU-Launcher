@@ -20,4 +20,4 @@ jobs:
       - name: Run rustfmt
         run: cargo fmt -- --check
       - name: Run tests
-        run: cargo test --target x86_64-pc-windows-msvc --all-features --verbose
+        run: cargo test --target x86_64-pc-windows-msvc --all-features
