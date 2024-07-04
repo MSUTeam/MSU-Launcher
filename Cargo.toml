@@ -27,8 +27,6 @@ windows = {version = "0.57.0", features = ["Win32_System_SystemInformation", "Wi
 hex = "0.4.3"
 sha2 = "0.10.8"
 reqwest = { version = "0.12.4", features = ["json"] }
-image = {version = "0.25.1", default-features = false, features = ["png"]}
-manganis = "0.2.2"
 bytes = "1.6.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing-appender = "0.2.3"
@@ -42,7 +40,6 @@ ordered-float = "4.2.1"
 
 [build-dependencies]
 anyhow = "1.0.86"
-# buildrs_cache = {path = "D:/Scripts/rust/buildrs_tools"}
 image = { version = "0.25.1", default-features = false, features = ["png", "ico"] }
 winresource = "0.1.17"
 dagrs = {git = "https://github.com/dagrs-dev/dagrs", rev= "2fd45f3ba761f16bb8b285d9ea5657170e9576f0"}
