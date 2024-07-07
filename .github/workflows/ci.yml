@@ -1,7 +1,60 @@
-name: CI
-on: [push, pull_request]
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
 
 jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Run TailwindCSS
+        run: npx tailwindcss -i ./input.css -o ./assets/assets/style/tailwind.css
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: dioxus-cli@0.5
+
+      - name: Build Dioxus App
+        run: dx build --release --features bundle --target x86_64-pc-windows-msvc
+
+      - name: Remove unnecessary files
+        run: rm dist/__assets_head.html && rm dist/index.html # these are dioxus build artifacts unnecessary for the desktop build
+
+      - name: Package the build artifacts
+        run: |
+          mkdir -p release
+          Compress-Archive -Path .\dist\* -DestinationPath .\release\msu-launcher.zip
+        shell: powershell
+
+      - name: Upload artifact for release
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: release/msu-launcher.zip
   check:
     runs-on: windows-latest
     steps:
