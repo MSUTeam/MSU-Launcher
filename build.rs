@@ -421,17 +421,10 @@ fn create_ico_from_png(png_path: &str, ico_path: &str) -> Result<()> {
 }
 
 fn create_icon(_: &Input, _: Arc<EnvVar>) -> Result<NeedUpdate> {
-	if cfg!(target_os = "windows") {
-		println!("cargo:warning=Rebuilding icon");
-		let png_string = format!("{}/msu_logo.png", RAW_ASSETS);
-		let ico_string = format!("{}/gfx/icons/msu_logo.ico", ASSETS);
-		create_ico_from_png(&png_string, &ico_string)?;
-
-		Ok(NeedUpdate::Yes)
-	} else {
-		println!("cargo:warning=Skipping icon");
-		Ok(NeedUpdate::No)
-	}
+	let png_string = format!("{}/msu_logo.png", RAW_ASSETS);
+	let ico_string = format!("{}/gfx/icons/msu_logo.ico", ASSETS);
+	create_ico_from_png(&png_string, &ico_string)?;
+	Ok(NeedUpdate::Yes)
 }
 
 fn attach_icon_to_exe(_: Input, _: Arc<EnvVar>) -> Output {
