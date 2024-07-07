@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  await-build:
+    runs-on: ubuntu-latest
+    outputs:
+      conclusion: ${{ steps.wait-for-cb.outputs.conclusion }}
+    steps:
+      - name: Wait for Continuous Build
+        id: wait-for-cb
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          timeoutSeconds: 3600
+          intervalSeconds: 60
+          checkName: build
+          ref: ${{ github.sha }}
+
+  release:
+    needs: await-build
+    if: needs.await-build.outputs.conclusion == 'success'
+    runs-on: windows-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app
+
+      - name: Calculate Hash
+        id: calculate_hash
+        run: |
+            HASH=$(sha256sum msu-launcher.zip | awk '{ print $1 }')
+            echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Auto generated release
+            msu-launcher.zip SHA256 hash: `${{ steps.calculate_hash.outputs.hash }}`
+          draft: true
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: csexton/release-asset-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          release-url: ${{ steps.create_release.outputs.upload_url }}
+          file: msu-launcher.zip
