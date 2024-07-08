@@ -30,18 +30,14 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-
       - uses: taiki-e/cache-cargo-install-action@v2
         with:
           tool: dioxus-cli@0.5
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: cargo-build-${{ runner.os }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build Dioxus App
         run: dx build --release --features bundle --target x86_64-pc-windows-msvc
@@ -69,14 +65,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
-      - uses: actions/cache@v3
+      - uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-check-${{ hashFiles('**/Cargo.lock') }}
+          prefix-key: cargo-check-${{ runner.os }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Run clippy
         run: cargo clippy --target x86_64-pc-windows-msvc --all-features -- -D warnings
       - name: Run rustfmt
