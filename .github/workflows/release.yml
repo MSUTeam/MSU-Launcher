@@ -6,26 +6,12 @@ on:
       - '*'
 
 jobs:
-  await-build:
-    runs-on: ubuntu-latest
-    outputs:
-      conclusion: ${{ steps.wait-for-cb.outputs.conclusion }}
-    steps:
-      - name: Wait for Continuous Build
-        id: wait-for-cb
-        uses: fountainhead/action-wait-for-check@v1.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          timeoutSeconds: 3600
-          intervalSeconds: 60
-          checkName: build
-          ref: ${{ github.sha }}
+  build:
+    uses: ./.github/workflows/ci.yml
 
   release:
-    needs: await-build
-    if: needs.await-build.outputs.conclusion == 'success'
     runs-on: windows-latest
-
+    needs: build
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
