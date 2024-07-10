@@ -22,7 +22,7 @@ const STEAMLESS_HASH_STR: &str = include_str!("../hashes/steamless.txt");
 fn get_hash_set_from_str(hash_str: &str) -> HashSet<Vec<u8>> {
 	hash_str
 		.lines()
-		.map(|line| hex::decode(line).unwrap())
+		.map(|line| const_hex::decode(line).unwrap())
 		.collect()
 }
 
