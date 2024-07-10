@@ -12,11 +12,37 @@ use crate::steamless;
 const STEAMLESS_PATH_DEFAULT: &str = "./steamless";
 const BB_GAME_ID: u32 = 365360;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(from = "SerializedConfig", into = "SerializedConfig")]
 pub struct Config {
 	bb_path: Option<PathBuf>,
 	steamless_installed: bool,
 	steamless_path: PathBuf,
+}
+
+#[derive(Deserialize, Serialize)]
+struct SerializedConfig {
+	bb_path: Option<PathBuf>,
+	steamless_path: PathBuf,
+}
+
+impl From<SerializedConfig> for Config {
+	fn from(value: SerializedConfig) -> Self {
+		Self {
+			bb_path: value.bb_path,
+			steamless_installed: false,
+			steamless_path: value.steamless_path,
+		}
+	}
+}
+
+impl From<Config> for SerializedConfig {
+	fn from(value: Config) -> Self {
+		Self {
+			bb_path: value.bb_path,
+			steamless_path: value.steamless_path,
+		}
+	}
 }
 
 const CONFIG_FILE: &str = "config.toml";
@@ -150,9 +176,6 @@ impl Config {
 	}
 
 	pub fn check_steamless_installed(&mut self) -> bool {
-		if self.steamless_installed {
-			return true;
-		}
 		self.steamless_installed = steamless::is_steamless_installed(&self.steamless_path);
 		self.steamless_installed
 	}
