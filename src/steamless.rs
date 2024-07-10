@@ -1,6 +1,7 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use dioxus::signals::{Readable, SyncSignal, Writable};
+use sha2::{Digest, Sha256};
 use std::{
 	fs::File,
 	io::{Cursor, Read, Write},
@@ -16,6 +17,12 @@ const STEAMLESS_API_NAME: &str = "Steamless.API.dll";
 const STEAMLESS_31_X86_VARIANT_NAME: &str = "Steamless.Unpacker.Variant31.x86.dll";
 
 pub const ZIP_URL: &str = "https://github.com/atom0s/Steamless/releases/download/v3.1.0.5/Steamless.v3.1.0.5.-.by.atom0s.zip";
+const STEAMLESS_HASH: [u8; 32] = match const_hex::const_decode_to_array(
+	b"E3E2D22E098FF3FB359B2876AA2BED9596F0501E6FF588CBFFAE90A76D2DC4F5",
+) {
+	Ok(array) => array,
+	Err(_) => unreachable!(),
+};
 
 fn extract_file_to_path(
 	zip: &mut ZipArchive<Cursor<Bytes>>,
@@ -36,6 +43,13 @@ fn extract_file_to_path(
 
 async fn download_steamless(url: &str, target_path: &Path) -> Result<()> {
 	let response = reqwest::get(url).await?.bytes().await?;
+	let hash = <Sha256 as Digest>::digest(response.as_ref());
+	if hash.as_slice() != STEAMLESS_HASH {
+		return Err(anyhow!(
+			"Hash mismatch for steamless (downloaded {} vs saved {}), erroring to prevent potential security risk"
+		, const_hex::encode(hash), const_hex::encode(STEAMLESS_HASH)));
+	}
+
 	let reader = Cursor::new(response);
 	let mut zip = zip::ZipArchive::new(reader)?;
 	let plugins_folder = Path::new(STEAMLESS_PLUGIN_FOLDER);
