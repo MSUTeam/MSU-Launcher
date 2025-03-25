@@ -178,7 +178,9 @@ pub fn patch_exe(exe_path: &Path) -> Result<String> {
 	} else if is_laa(exe_path)? {
 		Ok("Already patched".to_string())
 	} else {
-		Err(anyhow!("Unknown version of Battle Brothers, verify or reinstall your game from a legitimate source"))
+		Err(anyhow!(
+			"Unknown version of Battle Brothers, if there is a new version, make a GitHub issue."
+		))
 	}
 }
 
