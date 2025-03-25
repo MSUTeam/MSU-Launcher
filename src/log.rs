@@ -15,7 +15,7 @@ static LOG_CHANNEL: once_cell::sync::Lazy<(
 
 struct MessageVisitor<'a>(&'a mut String);
 
-impl<'a> tracing::field::Visit for MessageVisitor<'a> {
+impl tracing::field::Visit for MessageVisitor<'_> {
 	fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
 		if field.name() == "message" {
 			let _ = write!(self.0, "{:?}", value);

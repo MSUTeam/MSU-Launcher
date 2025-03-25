@@ -105,10 +105,7 @@ impl Default for Config {
 
 impl Config {
 	pub fn load_or_default() -> Self {
-		match Self::load() {
-			Ok(config) => config,
-			Err(_) => Config::default(),
-		}
+		Self::load().unwrap_or_default()
 	}
 
 	#[cfg(test)]
