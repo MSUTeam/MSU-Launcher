@@ -32,7 +32,7 @@ jobs:
 
       - uses: taiki-e/cache-cargo-install-action@v2
         with:
-          tool: dioxus-cli@0.5.7
+          tool: dioxus-cli@0.6.3
 
       - uses: Swatinem/rust-cache@v2
         with:
