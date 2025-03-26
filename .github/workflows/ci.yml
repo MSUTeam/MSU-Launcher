@@ -45,7 +45,7 @@ jobs:
       - name: Package the build artifacts
         run: |
           mkdir -p release
-          Compress-Archive -Path .\dist\* -DestinationPath .\release\msu-launcher.zip
+          Compress-Archive -Path .\target\dx\MSULauncher\release\windows\app\* -DestinationPath .\release\msu-launcher.zip
         shell: powershell
 
       - name: Upload artifact for release
