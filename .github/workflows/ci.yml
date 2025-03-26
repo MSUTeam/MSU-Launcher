@@ -42,6 +42,13 @@ jobs:
       - name: Build Dioxus App
         run: dx build --release --features bundle --target x86_64-pc-windows-msvc
 
+      - name: Move Assets
+        run: |
+          mv .\target\dx\MSULauncher\release\windows\app\assets\assets .\target\dx\MSULauncher\release\windows\app\assets_temp
+          rm .\target\dx\MSULauncher\release\windows\app\assets\
+          mv .\target\dx\MSULauncher\release\windows\app\assets_temp .\target\dx\MSULauncher\release\windows\app\assets
+
+
       - name: Package the build artifacts
         run: |
           mkdir -p release
