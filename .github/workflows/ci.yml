@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: Run TailwindCSS
-        run: npx tailwindcss -i ./input.css -o ./assets/assets/style/tailwind.css
+        run: npx tailwindcss -i ./input.css -o ./assets/style/tailwind.css
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -41,13 +41,6 @@ jobs:
 
       - name: Build Dioxus App
         run: dx build --release --features bundle --target x86_64-pc-windows-msvc
-
-      - name: Move Assets
-        run: |
-          mv .\target\dx\MSULauncher\release\windows\app\assets\assets .\target\dx\MSULauncher\release\windows\app\assets_temp
-          rm .\target\dx\MSULauncher\release\windows\app\assets\
-          mv .\target\dx\MSULauncher\release\windows\app\assets_temp .\target\dx\MSULauncher\release\windows\app\assets
-
 
       - name: Package the build artifacts
         run: |
