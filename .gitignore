@@ -11,3 +11,9 @@
 /assets/assets/style/tailwind.css
 /node_modules/
 /steamless/
+
+/logs/
+tailwind.css
+config.toml
+msu_logo.ico
+tasks.json
