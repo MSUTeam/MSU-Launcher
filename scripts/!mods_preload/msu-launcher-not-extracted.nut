@@ -1,0 +1,1 @@
+::Hooks.errorAndQuit("The downloaded msu-launcher.zip file must not be placed inside the BB data folder. Instead extract it somewhere outside and then run MSULauncher.exe. Then it will create its own ~mod_msu_launcher.zip file in your data folder which will be correct. For details, follow the Instructions for Users on the MSU Launcher NexusMods page.");
